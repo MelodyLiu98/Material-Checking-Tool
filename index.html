@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Material Visibility Troubleshooting Tool</title>
+  <style>
+    :root {
+      --bg: #f5f6f8;
+      --card: #ffffff;
+      --text: #333333;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --header: #f3f4f6;
+      --pink: #ff66a3;
+      --pink-soft: #ffe6f0;
+      --pink-hover: #f84f97;
+      --shadow: 0 4px 14px rgba(0,0,0,0.08);
+      --link: #c2185b;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 1100px;
+      margin: 28px auto;
+      padding: 0 16px 24px;
+    }
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--line);
+      overflow: hidden;
+    }
+    .hero {
+      padding: 22px 24px 14px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff 0%, #fff8fb 100%);
+    }
+    .title {
+      margin: 0;
+      font-size: 26px;
+      line-height: 1.25;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .subtitle {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .notice {
+      margin-top: 14px;
+      background: var(--pink-soft);
+      border-left: 5px solid var(--pink);
+      color: #7b1e47;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .section {
+      padding: 20px 24px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .label-sub {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 400;
+    }
+    input[type="text"], textarea {
+      width: 100%;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 14px;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    input[type="text"]:focus, textarea:focus {
+      border-color: var(--pink);
+      box-shadow: 0 0 0 3px rgba(255, 102, 163, 0.15);
+    }
+    textarea {
+      min-height: 132px;
+      resize: vertical;
+      line-height: 1.45;
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .btn {
+      appearance: none;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.04s ease, background 0.2s ease, opacity 0.2s ease;
+    }
+    .btn:active { transform: translateY(1px); }
+    .btn-primary { background: var(--pink); color: #fff; }
+    .btn-primary:hover { background: var(--pink-hover); }
+    .btn-secondary { background: #e5e7eb; color: #374151; }
+    .btn-secondary:hover { background: #d7dbe1; }
+    .statusbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 24px 16px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #9ca3af;
+      display: inline-block;
+      flex: 0 0 10px;
+    }
+    .dot.success { background: #22c55e; }
+    .dot.error { background: #ef4444; }
+    .dot.loading { background: var(--pink); }
+    .table-wrap {
+      padding: 0 24px 24px;
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 700px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      background: #fff;
+    }
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+    }
+    th {
+      background: var(--header);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    tr:last-child td { border-bottom: none; }
+    .result-bilingual .cn,
+    .result-bilingual .en,
+    .reason-cn,
+    .reason-en {
+      display: block;
+    }
+    .result-bilingual .en,
+    .reason-en {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 2px;
+    }
+    .reason-list {
+      margin: 0;
+      padding-left: 18px;
+    }
+    .reason-list li {
+      margin: 2px 0 8px;
+      line-height: 1.35;
+    }
+    .empty-note {
+      color: var(--muted);
+      font-size: 13px;
+      padding: 12px 0;
+    }
+    .footer-note {
+      padding: 0 24px 24px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    a { color: var(--link); }
+    a:hover { opacity: 0.85; }
+    .inline-link { text-decoration: underline; font-weight: 700; }
+    @media (max-width: 768px) {
+      .title { font-size: 22px; }
+      .hero, .section, .statusbar, .table-wrap, .footer-note { padding-left: 16px; padding-right: 16px; }
+      .toolbar { flex-direction: column; }
+      .btn { width: 100%; }
+    }
+  </style>
+
+  <script src="data.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="hero">
+        <h1 class="title">物料商城可见性排查工具</h1>
+        <div class="subtitle">Material Visibility Troubleshooting Tool</div>
+        <div class="notice" id="loadNotice">⏳ 正在检查数据加载状态 / Checking data loading status...</div>
+      </div>
+
+      <div class="section">
+        <div class="grid">
+          <div>
+            <label for="customerInput">
+              客户账号 / Customer
+              <span class="label-sub">仅支持单个客户账号查询 / Single customer only</span>
+            </label>
+            <input id="customerInput" type="text" placeholder="请输入单个 Customer / Enter one Customer only" />
+          </div>
+
+          <div>
+            <label for="materialsInput">
+              物料号（每行一个） / Material (one per line)
+              <span class="label-sub">支持一次输入多个物料号；每行一个 / Multiple materials supported, one per line</span>
+            </label>
+            <textarea id="materialsInput" placeholder="例如 / Example:
+11343903
+529760"></textarea>
+          </div>
+
+          <div class="toolbar">
+            <button class="btn btn-primary" id="checkBtn">查询 / Check</button>
+            <button class="btn btn-secondary" id="clearBtn">清空 / Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="statusbar">
+        <span class="dot loading" id="statusDot"></span>
+        <span id="statusText">等待初始化 / Waiting for initialization</span>
+      </div>
+
+      <div class="table-wrap">
+        <table id="resultTable">
+          <thead>
+            <tr>
+              <th style="width: 20%;">Customer</th>
+              <th style="width: 20%;">Material</th>
+              <th style="width: 18%;">Result</th>
+              <th style="width: 42%;">Reason / 原因</th>
+            </tr>
+          </thead>
+          <tbody id="resultBody">
+            <tr><td colspan="4" class="empty-note">暂无查询结果 / No query results yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="footer-note">说明 / Note：请使用浏览器打开本文件，避免用文本编辑器直接打开。</div>
+    </div>
+  </div>
+
+  <script>
+    const SYNC_FORM_URL = 'https://forms.office.com/Pages/ResponsePage.aspx?id=uGR0CZwGPkWSVMF-xwcxDbCZmHuh5-NBqajlnpV-IVBUMlRCQkZXV1hOWFJQQVU2WU5JSk1MVlVRNS4u';
+
+    function setStatus(type, text) {
+      const dot = document.getElementById('statusDot');
+      const txt = document.getElementById('statusText');
+      dot.className = 'dot ' + (type || 'loading');
+      txt.textContent = text;
+    }
+
+    function setNotice(ok, text) {
+      const box = document.getElementById('loadNotice');
+      box.innerHTML = (ok ? '✅ ' : '❌ ') + text;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function splitCodes(value) {
+      if (!value) return [];
+      return String(value).split(/[;,，；]+/).map(s => s.trim()).filter(Boolean);
+    }
+
+    function toBilingualResult(raw) {
+      const text = String(raw || '').trim();
+      if (!text) {
+        return { cn: '不可见', en: 'Not Visible' };
+      }
+      const lower = text.toLowerCase();
+      if (lower === 'not visible') return { cn: '不可见', en: 'Not Visible' };
+      if (lower === 'visible') return { cn: '可见', en: 'Visible' };
+      if (lower === 'not found') return { cn: '未找到', en: 'Not Found' };
+      return { cn: text, en: text };
+    }
+
+    function toBilingualReason(raw) {
+      const text = String(raw || '').trim();
+      if (!text) {
+        return { cn: '未提供原因说明', en: 'No reason provided', html: null };
+      }
+      let m;
+      if (text === '物料没有extend到对应sales Org，请联系CSR申请extend物料' || text === 'NO_EXTEND') {
+        return {
+          cn: '物料没有extend到对应sales Org，请联系CSR申请extend物料',
+          en: 'Material is not extended to the corresponding sales org. Please contact CSR to request material extension.',
+          html: null
+        };
+      }
+      if (text === '物料状态非正常可售卖状态（51），请联系BU查询' || text === 'STATUS') {
+        return {
+          cn: '物料状态非正常可售卖状态（51），请联系BU查询',
+          en: 'Material status is not in normal sellable status (51). Please contact BU for checking.',
+          html: null
+        };
+      }
+      m = text.match(/^此物料在SAP中的状态为[“\"]?(.+?)[”\"]?，请联系BU在SAP中移除此状态(?:，才可在商城中使用该物料)?$/);
+      if (m || text === 'CROSS_STATUS') {
+        const status = m ? m[1] : 'XX';
+        return {
+          cn: '此物料在SAP中的状态为“' + status + '”，请联系BU在SAP中移除此状态，才可在商城中使用该物料',
+          en: 'This material has SAP status "' + status + '". Please contact BU to remove this status in SAP before the material can be used in the webshop.',
+          html: null
+        };
+      }
+      m = text.match(/^该客户账号没有(.+?)产品授权，请在CRM中提交PAR Request申请$/);
+      if (m || text === 'NO_AUTH') {
+        const pc = m ? m[1] : 'XX';
+        return {
+          cn: '该客户账号没有' + pc + '产品授权，请在CRM中提交PAR Request申请',
+          en: 'This customer account is not authorized for product class ' + pc + '. Please submit a PAR Request in CRM.',
+          html: null
+        };
+      }
+      if (text === '该物料为限制性物料，请联系BU在SAP中进行释放' || text === 'EXCLUSIVE') {
+        return {
+          cn: '该物料为限制性物料，请联系BU在SAP中进行释放',
+          en: 'This material is restricted. Please contact BU to release it in SAP.',
+          html: null
+        };
+      }
+      if (text === '物料数据没有同步到商城，请联系DCE Admin处理' || text === 'SYNC') {
+        return {
+          cn: '物料数据没有同步到商城，请提交此表格登记',
+          en: 'Material data is not synchronized to the webshop. Please submit this form to register the issue.',
+          html:
+            '<span class="reason-cn">物料数据没有同步到商城，请<a class="inline-link" href="' + SYNC_FORM_URL + '" target="_blank" rel="noopener noreferrer">提交此表格登记</a></span>' +
+            '<span class="reason-en">Material data is not synchronized to the webshop. Please <a class="inline-link" href="' + SYNC_FORM_URL + '" target="_blank" rel="noopener noreferrer">submit this form</a> to register the issue.</span>'
+        };
+      }
+      return { cn: text, en: text, html: null };
+    }
+
+    function getReasonMessagesFromCodes(codeText) {
+      return splitCodes(codeText).map(toBilingualReason);
+    }
+
+    function lookupFromTable(customer, material) {
+      const table = window.FINAL_TABLE || window.finalTable || window.final_table || null;
+      if (!Array.isArray(table)) return null;
+      const c = String(customer).trim();
+      const m = String(material).trim();
+      const rec = table.find(item =>
+        String(item.Customer ?? item.customer ?? '').trim() === c &&
+        String(item.Material ?? item.material ?? '').trim() === m
+      );
+      if (!rec) return null;
+
+      const result = rec.Result ?? rec.result ?? 'Not Visible';
+      const reasonCode = rec.ReasonCode ?? rec.reasonCode ?? rec.reason_code ?? '';
+      const reasonText = rec.ReasonText ?? rec.reasonText ?? rec.reason_text ?? '';
+
+      let reasons = [];
+      if (reasonText) {
+        reasons = String(reasonText).split(/[；;]+/).map(s => toBilingualReason(s)).filter(Boolean);
+      } else if (reasonCode) {
+        reasons = getReasonMessagesFromCodes(reasonCode);
+      }
+
+      return {
+        Result: result,
+        Reasons: reasons.length ? reasons : [toBilingualReason('SYNC')]
+      };
+    }
+
+    function runByFunction(customer, material) {
+      if (typeof window.checkMaterial !== 'function') return null;
+      const out = window.checkMaterial(customer, material);
+      if (out == null) return null;
+
+      if (typeof out === 'string') {
+        return { Result: 'Not Visible', Reasons: [toBilingualReason(out)] };
+      }
+
+      if (typeof out === 'object') {
+        const result = out.Result || out.result || 'Not Visible';
+        const reasonArr = out.Reasons || out.reasons || [];
+        const reasonText = out.ReasonText || out.reasonText || '';
+        const reasonCode = out.ReasonCode || out.reasonCode || '';
+        let reasons = [];
+
+        if (Array.isArray(reasonArr) && reasonArr.length) {
+          reasons = reasonArr.map(r => {
+            if (typeof r === 'string') return toBilingualReason(r);
+            if (r && typeof r === 'object') return toBilingualReason(r.message || r.Message || JSON.stringify(r));
+            return toBilingualReason(String(r));
+          });
+        } else if (reasonText) {
+          reasons = String(reasonText).split(/[；;]+/).map(s => toBilingualReason(s)).filter(Boolean);
+        } else if (reasonCode) {
+          reasons = getReasonMessagesFromCodes(reasonCode);
+        }
+
+        return {
+          Result: result,
+          Reasons: reasons.length ? reasons : [toBilingualReason('SYNC')]
+        };
+      }
+      return null;
+    }
+
+    function renderRows(rows) {
+      const body = document.getElementById('resultBody');
+      body.innerHTML = '';
+      if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="4" class="empty-note">未找到结果 / No results found</td></tr>';
+        return;
+      }
+
+      rows.forEach(item => {
+        const tr = document.createElement('tr');
+        const resultObj = toBilingualResult(item.result);
+        const resultHtml = '<span class="result-bilingual"><span class="cn">' + escapeHtml(resultObj.cn) + '</span><span class="en">' + escapeHtml(resultObj.en) + '</span></span>';
+        const reasonHtml = item.reasons.length
+          ? '<ul class="reason-list">' + item.reasons.map(r => {
+              if (r.html) return '<li>' + r.html + '</li>';
+              return '<li><span class="reason-cn">' + escapeHtml(r.cn) + '</span><span class="reason-en">' + escapeHtml(r.en) + '</span></li>';
+            }).join('') + '</ul>'
+          : '<span class="empty-note">N/A</span>';
+
+        tr.innerHTML = `
+          <td>${escapeHtml(item.customer)}</td>
+          <td>${escapeHtml(item.material)}</td>
+          <td>${resultHtml}</td>
+          <td>${reasonHtml}</td>
+        `;
+        body.appendChild(tr);
+      });
+    }
+
+    function performCheck() {
+      const customerRaw = document.getElementById('customerInput').value.trim();
+      const customerTokens = customerRaw.split(/[\s,，;；]+/).map(s => s.trim()).filter(Boolean);
+      if (customerTokens.length !== 1) {
+        alert('仅支持单个客户账号查询 / Single customer only');
+        return;
+      }
+      const customer = customerTokens[0];
+
+      const materials = document.getElementById('materialsInput').value
+        .split(/\r?\n/)
+        .map(s => s.trim())
+        .filter(Boolean);
+
+      if (!materials.length) {
+        alert('请输入至少一个物料号 / Please enter at least one Material');
+        return;
+      }
+
+      setStatus('loading', '查询中 / Querying...');
+      const rows = [];
+      for (const material of materials) {
+        let rec = runByFunction(customer, material);
+        if (!rec) rec = lookupFromTable(customer, material);
+        if (!rec) {
+          rec = {
+            Result: 'Not Found',
+            Reasons: [{
+              cn: 'data.js 中没有找到该记录，或未暴露 checkMaterial / FINAL_TABLE',
+              en: 'No matching record was found in data.js, or checkMaterial / FINAL_TABLE is not exposed.',
+              html: null
+            }]
+          };
+        }
+        rows.push({
+          customer,
+          material,
+          result: rec.Result || 'Not Visible',
+          reasons: Array.isArray(rec.Reasons) ? rec.Reasons : [toBilingualReason('SYNC')]
+        });
+      }
+      renderRows(rows);
+      setStatus('success', '查询完成 / Query finished');
+    }
+
+    function clearAll() {
+      document.getElementById('customerInput').value = '';
+      document.getElementById('materialsInput').value = '';
+      document.getElementById('resultBody').innerHTML = '<tr><td colspan="4" class="empty-note">暂无查询结果 / No query results yet</td></tr>';
+      setStatus('success', '已清空 / Cleared');
+    }
+
+    function init() {
+      const hasFunc = typeof window.checkMaterial === 'function';
+      const hasTable = Array.isArray(window.FINAL_TABLE) || Array.isArray(window.finalTable) || Array.isArray(window.final_table);
+      if (hasFunc || hasTable) {
+        setNotice(true, '数据已加载 / Data loaded successfully');
+        setStatus('success', '就绪 / Ready');
+      } else {
+        setNotice(false, '未检测到 checkMaterial 或 FINAL_TABLE。请确认 data.js 与 index.html 位于同一文件夹，且 data.js 已正确输出。');
+        setStatus('error', '未找到数据对象 / Data object not found');
+      }
+      document.getElementById('checkBtn').addEventListener('click', performCheck);
+      document.getElementById('clearBtn').addEventListener('click', clearAll);
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
